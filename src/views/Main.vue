@@ -163,7 +163,7 @@ export default {
       binaryPath_3: "",
       binaryPath_4: "",
       binaryPath_5: "",
-      binaryAddress_1: "0x0",
+      binaryAddress_1: "0x10000",
       binaryAddress_2: "0x290000",
       binaryAddress_3: "",
       binaryAddress_4: "",

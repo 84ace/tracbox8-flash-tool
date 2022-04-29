@@ -12,6 +12,8 @@ const os = require("os"); // Comes with node.js
 const thisOS = os.type()
 console.log(thisOS);
 
+console.log(process.env.PATH);
+
 import scanSerialPorts from './components/scan_serial_ports'
 
 import { app, protocol, BrowserWindow } from 'electron'
@@ -34,12 +36,12 @@ function createWindow () {
     width: 800, 
     height: 375,
     icon: path.join(__dirname, 'build/flash.png'),
-    resizable: false,
+    resizable: true,
     useContentSize: true,
     title: "TracBox8 Flash Utility", 
     webPreferences: {
       nodeIntegration: true,
-      devTools: false
+      devTools: true
   } })
   win.setMenu(null);
   win.on('page-title-updated', function(e) {
