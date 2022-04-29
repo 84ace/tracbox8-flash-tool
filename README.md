@@ -1,8 +1,8 @@
-# OSRR Flash Utility
+# TracBox 8 Flash Utility
 
-Update your OSRR with ease!
+Update your TracBox with ease!
 
-![app screenshot](https://raw.githubusercontent.com/FreeSK8/OSRR-Flash-Utility/master/src/assets/app-demo.gif)
+![app screenshot](https://raw.githubusercontent.com/84ace/tracbox8-flash-tool/master/src/assets/app-demo.gif)
 
 A cross platform app built with [Electron](https://www.electronjs.org/)
 
@@ -12,10 +12,11 @@ A cross platform app built with [Electron](https://www.electronjs.org/)
 
 ## Instructions
 
-* Plug in your OSRR
+* Plug in your TracBox
 * Click the `Scan Ports` button and select a `COM port`
-* (Optional) Click `Browse` to select a custom firmware file
-* Click `Flash` and hold the power button on your OSRR until complete
+* Click `Browse` to select a custom firmware.bin file
+* Click `Browse` to select a custom littlefs.bin file
+* Click `Flash` and wait
 
 ## Electron Project setup
 ```
