@@ -8,6 +8,10 @@ const { spawn } = require('child_process');
 
 const { dialog } = require('electron')
 
+const os = require("os"); // Comes with node.js
+const thisOS = os.type()
+console.log(thisOS);
+
 import scanSerialPorts from './components/scan_serial_ports'
 
 import { app, protocol, BrowserWindow } from 'electron'
@@ -28,7 +32,7 @@ function createWindow () {
   // Create the browser window.
   win = new BrowserWindow({ 
     width: 800, 
-    height: 355,
+    height: 375,
     icon: path.join(__dirname, 'build/flash.png'),
     resizable: false,
     useContentSize: true,
@@ -159,11 +163,26 @@ ipcMain.on('selectBinaryPath_5', (event, args) => {
 
 // Event handler for asynchronous incoming messages
 ipcMain.on('test-esptool-connection', (event, cmdLineArgs) => {
+  var esptoolOptions;
+  var launch;
   console.log("Baudrate: " + cmdLineArgs.baudrate);
   console.log("ComPort: " + cmdLineArgs.comPort);
   console.log('esptool.py', ['-b', cmdLineArgs.baudrate, '-p', cmdLineArgs.comPort, 'read_mac']);
-  const python = spawn('esptool.py', ['-b', cmdLineArgs.baudrate, '-p', cmdLineArgs.comPort, 'read_mac']);
 
+  esptoolOptions = [
+    path.join(path.dirname(__dirname), 'src', 'firmware','esptool.py'),
+    '-b', cmdLineArgs.baudrate, '-p', cmdLineArgs.comPort, 'read_mac'];
+
+  if (thisOS === 'Darwin') {
+    console.log("OSX Detected: " + thisOS);
+    launch = spawn('esptool.py', ['-b', cmdLineArgs.baudrate, '-p', cmdLineArgs.comPort, 'read_mac']);
+  } else if (thisOS === 'Windows_NT') {
+    console.log("Windows Detected: " + thisOS);
+    launch = spawn('python3', esptoolOptions);
+  }
+
+  const python = launch;
+  
   readline.createInterface({
     input : python.stdout,
     terminal : false
@@ -228,10 +247,7 @@ ipcMain.on('start-esptool-flash1', (event, cmdLineArgs) => {
   var esptoolOptions;
   var numberOfBinaries = 0;
   var fileLocation = "";
-
-  //console.log(cmdLineArgs.binaryPath_1);  
-
-  //console.log(process.resourcesPath);
+  var launch;
 
   if (cmdLineArgs.binaryPath_1 != 'firmware.bin') {
     fileLocation = cmdLineArgs.binaryPath_1;
@@ -241,8 +257,20 @@ ipcMain.on('start-esptool-flash1', (event, cmdLineArgs) => {
     fileLocation = path.join(desktop, cmdLineArgs.binaryPath_1);
     console.log('using builtin binary', fileLocation); 
   }
-  
-  const python = spawn('esptool.py', ['-b', cmdLineArgs.baudrate, '-p', cmdLineArgs.comPort, 'write_flash', cmdLineArgs.binaryAddress_1, fileLocation]);
+
+  esptoolOptions = [
+    path.join(path.dirname(__dirname), 'src', 'firmware','esptool.py'),
+    '-b', cmdLineArgs.baudrate, '-p', cmdLineArgs.comPort, 'write_flash', cmdLineArgs.binaryAddress_1, fileLocation];
+
+  if (thisOS === 'Darwin') {
+    console.log("OSX Detected: " + thisOS);
+    launch = spawn('esptool.py', ['-b', cmdLineArgs.baudrate, '-p', cmdLineArgs.comPort, 'write_flash', cmdLineArgs.binaryAddress_1, fileLocation]);
+  } else if (thisOS === 'Windows_NT') {
+    console.log("Windows Detected: " + thisOS);
+    launch = spawn('python3', esptoolOptions);
+  }
+
+  const python = launch;
   
   var progressCounter = 0;
   readline.createInterface({
@@ -305,28 +333,37 @@ ipcMain.on('start-esptool-flash2', (event, cmdLineArgs) => {
   console.log('\n\n');
   console.log("Baudrate: " + cmdLineArgs.baudrate);
   console.log("ComPort: " + cmdLineArgs.comPort);
-  console.log("File 2: " + cmdLineArgs.binaryPath_2 + " at: " + cmdLineArgs.binaryAddress_2);
+  console.log("File 1: " + cmdLineArgs.binaryPath_2 + " at: " + cmdLineArgs.binaryAddress_2);
   console.log('\n\n');
 
   var esptoolOptions;
   var numberOfBinaries = 0;
   var fileLocation = "";
-
-  //console.log(cmdLineArgs.binaryPath_2);  
-
-  //console.log(process.resourcesPath);
+  var launch;
 
   if (cmdLineArgs.binaryPath_2 != 'littlefs.bin') {
     fileLocation = cmdLineArgs.binaryPath_2;
-    console.log('using custom binary', fileLocation);  
+    console.log('using custom binary', fileLocation); 
   } else {
     var desktop = require('path').join(require('os').homedir(), 'Desktop');
     fileLocation = path.join(desktop, cmdLineArgs.binaryPath_2);
-    console.log('using builtin binary', fileLocation);  
+    console.log('using builtin binary', fileLocation); 
   }
-  
-  const python = spawn('esptool.py', ['-b', cmdLineArgs.baudrate, '-p', cmdLineArgs.comPort, 'write_flash', cmdLineArgs.binaryAddress_2, fileLocation]);
-  
+
+  esptoolOptions = [
+    path.join(path.dirname(__dirname), 'src', 'firmware','esptool.py'),
+    '-b', cmdLineArgs.baudrate, '-p', cmdLineArgs.comPort, 'write_flash', cmdLineArgs.binaryAddress_2, fileLocation];
+
+  if (thisOS === 'Darwin') {
+    console.log("OSX Detected: " + thisOS);
+    launch = spawn('esptool.py', ['-b', cmdLineArgs.baudrate, '-p', cmdLineArgs.comPort, 'write_flash', cmdLineArgs.binaryAddress_2, fileLocation]);
+  } else if (thisOS === 'Windows_NT') {
+    console.log("Windows Detected: " + thisOS);
+    launch = spawn('python3', esptoolOptions);
+  }
+
+  const python = launch;
+
   var progressCounter = 0;
   readline.createInterface({
     input : python.stdout,
