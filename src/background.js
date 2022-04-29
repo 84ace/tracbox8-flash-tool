@@ -28,11 +28,11 @@ function createWindow () {
   // Create the browser window.
   win = new BrowserWindow({ 
     width: 800, 
-    height: 420,
+    height: 355,
     icon: path.join(__dirname, 'build/flash.png'),
     resizable: false,
     useContentSize: true,
-    title: "OSRR Flash Utility", 
+    title: "TracBox8 Flash Utility", 
     webPreferences: {
       nodeIntegration: true,
       devTools: false
@@ -120,21 +120,25 @@ ipcMain.on('selectBinaryPath_1', (event, args) => {
 ipcMain.on('selectBinaryPath_2', (event, args) => {
   console.log(args);
   console.log(dialog.showOpenDialog({ filters: [{ name: 'Binary file', extensions: ['bin'] }], properties: ['openFile'] }, function(files) {
-    webpageFilePath = files[0];
-    console.log(files[0]);
-    event.sender.send('binaryPath_2', files[0]);
-  }));  
-})
-ipcMain.on('selectBinaryPath_3', (event, args) => {
-  console.log(args);
-  console.log(dialog.showOpenDialog({ filters: [{ name: 'Binary file', extensions: ['bin'] }], properties: ['openFile'] }, function(files) {}).then(
+    //firmwareFilePath = files[0];
+    //console.log(files[0]);
+    //event.sender.send('binaryPath_2', files[0]);
+  }).then(
     function(result) {
      console.log(result);
      if (result['canceled'] == false) {
-      event.sender.send('binaryPath_3', result['filePaths'][0]);
+      event.sender.send('binaryPath_2', result['filePaths'][0]);
      }
   }
   ));
+})
+ipcMain.on('selectBinaryPath_3', (event, args) => {
+  console.log(args);
+  console.log(dialog.showOpenDialog({ filters: [{ name: 'Binary file', extensions: ['bin'] }], properties: ['openFile'] }, function(files) {
+    webpageFilePath = files[0];
+    console.log(files[0]);
+    event.sender.send('binaryPath_3', files[0]);
+  }));  
 })
 ipcMain.on('selectBinaryPath_4', (event, args) => {
   console.log(args);
@@ -157,6 +161,7 @@ ipcMain.on('selectBinaryPath_5', (event, args) => {
 ipcMain.on('test-esptool-connection', (event, cmdLineArgs) => {
   console.log("Baudrate: " + cmdLineArgs.baudrate);
   console.log("ComPort: " + cmdLineArgs.comPort);
+  console.log('esptool.py', ['-b', cmdLineArgs.baudrate, '-p', cmdLineArgs.comPort, 'read_mac']);
   const python = spawn('esptool.py', ['-b', cmdLineArgs.baudrate, '-p', cmdLineArgs.comPort, 'read_mac']);
 
   readline.createInterface({
@@ -213,56 +218,31 @@ ipcMain.on('test-esptool-connection', (event, cmdLineArgs) => {
 })
 
 // Event handler for asynchronous incoming messages
-ipcMain.on('start-esptool-flash', (event, cmdLineArgs) => {
-  if (cmdLineArgs.binaryPath_3 == "/Included_firmware.bin") {
-    cmdLineArgs.binaryPath_3 = path.join(process.resourcesPath, 'firmware/', 'osrr.bin');
-  }
-  console.log("start-esptool-flash::flashAll? " + cmdLineArgs.flashAll);
-  if (cmdLineArgs.flashAll) {
-    cmdLineArgs.binaryPath_1 = path.join(process.resourcesPath, 'firmware/', 'bootloader.bin');
-    cmdLineArgs.binaryPath_2 = path.join(process.resourcesPath, 'firmware/', 'partition-table.bin');
-    cmdLineArgs.binaryPath_4 = path.join(process.resourcesPath, 'firmware/', 'storage.bin');
-  } else {
-
-  }
+ipcMain.on('start-esptool-flash1', (event, cmdLineArgs) => {
   console.log('\n\n');
   console.log("Baudrate: " + cmdLineArgs.baudrate);
   console.log("ComPort: " + cmdLineArgs.comPort);
   console.log("File 1: " + cmdLineArgs.binaryPath_1 + " at: " + cmdLineArgs.binaryAddress_1);
-  console.log("File 2: " + cmdLineArgs.binaryPath_2 + " at: " + cmdLineArgs.binaryAddress_2);
-  console.log("File 3: " + cmdLineArgs.binaryPath_3 + " at: " + cmdLineArgs.binaryAddress_3);
-  console.log("File 4: " + cmdLineArgs.binaryPath_4 + " at: " + cmdLineArgs.binaryAddress_4);
   console.log('\n\n');
 
   var esptoolOptions;
   var numberOfBinaries = 0;
-  esptoolOptions = [
-    path.join(process.resourcesPath, 'firmware', 'esptool.py'),
-    '-b', cmdLineArgs.baudrate, '-p', cmdLineArgs.comPort, 'write_flash'];
+  var fileLocation = "";
 
-  if(cmdLineArgs.flashAll == true) {
-    esptoolOptions.push(cmdLineArgs.binaryAddress_1, cmdLineArgs.binaryPath_1);
-    numberOfBinaries++;
-  }
-  if(cmdLineArgs.flashAll == true) {
-    esptoolOptions.push(cmdLineArgs.binaryAddress_2, cmdLineArgs.binaryPath_2);
-    numberOfBinaries++;
-  }
+  //console.log(cmdLineArgs.binaryPath_1);  
 
-  // Always include firmware file
-  esptoolOptions.push(cmdLineArgs.binaryAddress_3, cmdLineArgs.binaryPath_3);
-  numberOfBinaries++;
+  //console.log(process.resourcesPath);
 
-  if(cmdLineArgs.flashAll == true) {
-    esptoolOptions.push(cmdLineArgs.binaryAddress_4, cmdLineArgs.binaryPath_4);
-    numberOfBinaries++;
+  if (cmdLineArgs.binaryPath_1 != 'firmware.bin') {
+    fileLocation = cmdLineArgs.binaryPath_1;
+    console.log('using custom binary', fileLocation); 
+  } else {
+    var desktop = require('path').join(require('os').homedir(), 'Desktop');
+    fileLocation = path.join(desktop, cmdLineArgs.binaryPath_1);
+    console.log('using builtin binary', fileLocation); 
   }
   
-  console.log(esptoolOptions);  
-
-  console.log(process.resourcesPath);
-
-  const python = spawn('python', esptoolOptions);
+  const python = spawn('esptool.py', ['-b', cmdLineArgs.baudrate, '-p', cmdLineArgs.comPort, 'write_flash', cmdLineArgs.binaryAddress_1, fileLocation]);
   
   var progressCounter = 0;
   readline.createInterface({
@@ -272,7 +252,90 @@ ipcMain.on('start-esptool-flash', (event, cmdLineArgs) => {
       console.log("LOG READLINE stdout: ");      
       console.log(line);
       event.sender.send('line-esptool-output', line + '\n');
-      event.sender.send('progress-bar', progressCounter++/numberOfBinaries);
+      event.sender.send('progress-bar', (progressCounter++ / 75) * 60);
+      console.log("number of lines: " + progressCounter);      
+    }).on('close', function() {
+      console.log("LOG READLINE stdout CLOSE");
+  });
+
+  readline.createInterface({
+    input : python.stderr,
+    terminal : false
+    }).on('line', function(line) {
+      console.log("LOG READLINE stderr: ");
+      console.log(line);
+      event.sender.send('line-esptool-error', line + '\n');
+    }).on('close', function() {
+      console.log("LOG READLINE stderr CLOSE");
+  });  
+
+  var stdoutChunks = [], stderrChunks = [];
+  python.stdout.on('data', (data) => {
+    stdoutChunks = stdoutChunks.concat(data);
+  });
+  python.stdout.on('end', () => {
+      var stdoutContent = Buffer.concat(stdoutChunks).toString();
+      //console.log('stdout chars:', stdoutContent.length);
+      //console.log(stdoutContent);
+      if(stdoutContent.length > 0) event.sender.send('esptool-output', stdoutContent);
+  });
+  
+  python.stderr.on('data', (data) => {
+    stderrChunks = stderrChunks.concat(data);
+  });
+  python.stderr.on('end', () => {
+      var stderrContent = Buffer.concat(stderrChunks).toString();
+      //console.log('stderr chars:', stderrContent.length);
+      //console.log(stderrContent);
+      event.sender.send('esptool-error', stderrContent);
+  });
+
+  python.on('close', (code) => {
+    console.log(`child process close all stdio with code ${code}`);
+  });
+
+  python.on('exit', (code) => {
+    console.log('Process exited with code', code)
+    event.sender.send('esptool-error-code', code);
+  });
+})
+
+// Event handler for asynchronous incoming messages
+ipcMain.on('start-esptool-flash2', (event, cmdLineArgs) => {
+  console.log('\n\n');
+  console.log("Baudrate: " + cmdLineArgs.baudrate);
+  console.log("ComPort: " + cmdLineArgs.comPort);
+  console.log("File 2: " + cmdLineArgs.binaryPath_2 + " at: " + cmdLineArgs.binaryAddress_2);
+  console.log('\n\n');
+
+  var esptoolOptions;
+  var numberOfBinaries = 0;
+  var fileLocation = "";
+
+  //console.log(cmdLineArgs.binaryPath_2);  
+
+  //console.log(process.resourcesPath);
+
+  if (cmdLineArgs.binaryPath_2 != 'littlefs.bin') {
+    fileLocation = cmdLineArgs.binaryPath_2;
+    console.log('using custom binary', fileLocation);  
+  } else {
+    var desktop = require('path').join(require('os').homedir(), 'Desktop');
+    fileLocation = path.join(desktop, cmdLineArgs.binaryPath_2);
+    console.log('using builtin binary', fileLocation);  
+  }
+  
+  const python = spawn('esptool.py', ['-b', cmdLineArgs.baudrate, '-p', cmdLineArgs.comPort, 'write_flash', cmdLineArgs.binaryAddress_2, fileLocation]);
+  
+  var progressCounter = 0;
+  readline.createInterface({
+    input : python.stdout,
+    terminal : false
+    }).on('line', function(line) {
+      console.log("LOG READLINE stdout: ");      
+      console.log(line);
+      event.sender.send('line-esptool-output', line + '\n');
+      event.sender.send('progress-bar', (progressCounter++ / 29) * 75);
       console.log("number of lines: " + progressCounter);      
     }).on('close', function() {
       console.log("LOG READLINE stdout CLOSE");

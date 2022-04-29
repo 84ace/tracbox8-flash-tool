@@ -4,8 +4,8 @@
         externals: ['serialport'],
         builderOptions: {
           // options placed here will be merged with default configuration and passed to electron-builder
-            "productName": "OSRR Flash Utility",
-            "appId": "com.derelictrobot.osrr-fw-utility",
+            "productName": "TracBox 8 Firmware Flash Utility",
+            "appId": "com.ftptechnologies.tracbox8-fw-utility",
             "extraResources": [
               {
                 "from": "./src/firmware/",
@@ -20,14 +20,14 @@
               "icon": "build/flash.ico"
             },
             "portable": {
-              "artifactName": "osrr_flash_utility_${version}.exe"
+              "artifactName": "tracbox8_flash_utility_${version}.exe"
             },
             "linux": {
               "target": ["appImage"],
               "icon": "build/flash.png"
             },
             "appImage": {
-              "artifactName": "osrr_flash_utility_${version}.AppImage"
+              "artifactName": "tracbox8_flash_utility_${version}.AppImage"
             }
             // "directories": {
             //     "output": "electron/output",

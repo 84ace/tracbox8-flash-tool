@@ -7,10 +7,10 @@ export default async function scanSerialPorts (mainWindow) {
     mainWindow.webContents.send('validComPorts', []);
   })
   if (portList != undefined) {
-    //console.log(portList)
+    console.log(portList)
 
     let validPorts = portList.filter((port) => {
-      return port.manufacturer === 'FTDI' || port.manufacturer === 'Silicon Labs'
+      return port.vendorId === '1a86' || port.productId === '7523' //duuuurty hack for OSX only
     })
     console.log(validPorts)
 

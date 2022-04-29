@@ -1,37 +1,53 @@
 <template>
-  <div class="home">
-    <b-row>
-
+  <div class="home" style='margin-top: 5px'>
+    <b-row>   
       <b-col cols="12">
-<div class="com-input">
-<img alt="FreeSK8 Rocks" src="../assets/freesk8.png" height="50">        
-</div>
-        <!-- 3 Binary and address -->
+        <img alt="FTP" src="../assets/ftp_logo.png" style='margin-right: 10px; margin-top: -5px; float: right' height="75"> 
+        <div style='margin-top: 65px; left: 630px; position: absolute;'>
+          Version: <span id="version">unknown</span>
+        </div>
+        <!--Firmware -->
         <b-row no-gutters>
-          <b-col>
-
+          <b-col cols="12">
             <div class="binary-input">
               <b-input-group size="sm">
                 <b-input-group-prepend>
-                  <b-button class="btn-xs" v-on:click="selectBinaryPath_3" variant="info">Browse</b-button>
+                  <b-button class="btn-xs" v-on:click="selectBinaryPath_1" variant="info">Browse</b-button>
                 </b-input-group-prepend>
                 <b-form-input
                   class="input-xs"
-                  v-model="binaryPath_3"
-                  placeholder="Select firmware file"
-                  :state="binaryInputState_3"
+                  v-model="binaryPath_1"
+                  placeholder="~/Desktop/firmware.bin"
+                  :state="binaryInputState_1"
                 ></b-form-input>
+                <b-button class="btn-xs" v-on:click="flash1" style="width: 120px; margin-left:5px;" size="sm" variant="dark">Flash</b-button>
               </b-input-group>
             </div>
           </b-col>
-          
         </b-row>
 
-        
-
+        <!--File System -->
+        <b-row no-gutters>
+          <b-col cols="12">
+            <div class="binary-input">
+              <b-input-group size="sm">
+                <b-input-group-prepend>
+                  <b-button class="btn-xs" v-on:click="selectBinaryPath_2" variant="info">Browse</b-button>
+                </b-input-group-prepend>
+                <b-form-input
+                  class="input-xs"
+                  v-model="binaryPath_2"
+                  placeholder="~/Desktop/littlefs.bin"
+                  :state="binaryInputState_2"
+                ></b-form-input>
+                <b-button class="btn-xs" v-on:click="flash2" style="width: 120px; margin-left:5px;" size="sm" variant="dark">Flash</b-button>
+              </b-input-group>
+            </div>
+          </b-col>
+        </b-row>
 
         <b-row no-gutters>
-          <b-col cols="6">
+          <b-col cols="12">
             <div class="com-input">
               <b-input-group size="sm">
                 <b-form-input class="input-xs" v-model="comPort" :state="comPortInputState" placeholder></b-form-input>
@@ -44,23 +60,18 @@
                     >{{ item.port }}</b-dropdown-item>
                   </b-dropdown>
                 </template>
+    
                 <b-button
                   class="btn-xs"
                   v-on:click="scanComPorts"
-                  style="width: 120px;"
+                  style="width: 120px; margin-left:5px;"
                   size="sm"
                   variant="dark"
                 >Scan Ports</b-button>
+                
+              <b-button class="btn-xs" v-on:click="testConnection" style="width: 120px; margin-left:5px;" size="sm" variant="dark">Test Connection</b-button>
               </b-input-group>
             </div>
-
-            <div class="com-input">
-              <b-button class="btn-xs" v-on:click="flash" style="width: 120px;" size="sm" variant="dark">Flash</b-button>
-              &nbsp;
-              <input type="checkbox" id="checkbox" v-model="flashAll">
-              <label for="checkbox">Flash all</label>
-            </div>
-      
           </b-col>
         </b-row>
       </b-col>
@@ -147,18 +158,18 @@ export default {
   computed: {},
   data() {
     return {
-      binaryPath_1: "",
-      binaryPath_2: "",
-      binaryPath_3: "/Included_firmware.bin",
+      binaryPath_1: "firmware.bin",
+      binaryPath_2: "littlefs.bin",
+      binaryPath_3: "",
       binaryPath_4: "",
       binaryPath_5: "",
-      binaryAddress_1: "0x1000",
-      binaryAddress_2: "0x8000",
-      binaryAddress_3: "0x10000",
-      binaryAddress_4: "0x110000",
+      binaryAddress_1: "0x0",
+      binaryAddress_2: "0x290000",
+      binaryAddress_3: "",
+      binaryAddress_4: "",
       binaryAddress_5: "",
       comPort: "",
-      baudrateSpeed: "921600",
+      baudrateSpeed: "460800",
       comPortInputState: null,
       baudrateInputState: null,
       binaryInputState_1: null,
@@ -191,7 +202,6 @@ export default {
       baudrateList: [{ value: 115200 }, { value: 921600 }],
       terminalData: "",
       cmdLineArgs: {
-        flashAll: this.flashAll,
         numberOfBinaries: [false, false, false, false, false],
         baudrate: this.baudrate,
         comPort: this.comPort,
@@ -289,7 +299,7 @@ export default {
           this.showSpinner = false;
           this.showErrorMark = false;
           this.showCheckMark = true;
-          this.flashProgressValue = 100;
+          this.flashProgressValue = 0;
           //this.terminalData = "";
           //this.terminalData = esptoolOutput;
           break;
@@ -350,22 +360,14 @@ export default {
         ipcRenderer.send("test-esptool-connection", this.cmdLineArgs);
       }
     },
-    flash: function() {
-      this.cmdLineArgs.numberOfBinaries[0] = false;
-      this.cmdLineArgs.numberOfBinaries[1] = false;
-      this.cmdLineArgs.numberOfBinaries[2] = false;
-      this.cmdLineArgs.numberOfBinaries[3] = false;
-      this.addressInputState_2 = null;
-      this.addressInputState_3 = null;
-      this.addressInputState_4 = null;
-      this.addressInputState_5 = null;
+    flash1: function() {
       if (this.comPort == "") {
         this.makeToast("danger", "Please select a COM port");
         if (this.comPort == "") this.comPortInputState = false;
-      } else if (this.binaryPath_3 == "" || this.binaryAddress_3 == "") {
+      } else if (this.binaryPath_1 == "" || this.binaryAddress_1 == "") {
         this.makeToast("danger", "Please select a firmware file");
-        if (this.binaryPath_3 == "") this.binaryInputState_3 = false;
-        if (this.binaryAddress_3 == "") this.addressInputState_3 = false;
+        if (this.binaryPath_1 == "") this.binaryInputState_1 = false;
+        if (this.binaryAddress_1 == "") this.addressInputState_1 = false;
       } else {
         this.flashProgressValue = 0;
         this.showCheckMark = false;
@@ -373,27 +375,37 @@ export default {
         this.showSpinner = true;
         this.terminalData = "";
 
-        this.cmdLineArgs.flashAll = this.flashAll;
         this.cmdLineArgs.baudrate = this.baudrateSpeed;
         this.cmdLineArgs.comPort = this.comPort;
-
-        this.cmdLineArgs.binaryPath_1 = this.binaryPath_1;
-        this.cmdLineArgs.binaryAddress_1 = this.binaryAddress_1;
-
-        this.cmdLineArgs.binaryPath_2 = this.binaryPath_2;
-        this.cmdLineArgs.binaryAddress_2 = this.binaryAddress_2;
-
-        this.cmdLineArgs.binaryPath_3 = this.binaryPath_3;
-        this.cmdLineArgs.binaryAddress_3 = this.binaryAddress_3;
-
-        this.cmdLineArgs.binaryPath_4 = this.binaryPath_4;
-        this.cmdLineArgs.binaryAddress_4 = this.binaryAddress_4;
-
-        this.cmdLineArgs.binaryPath_5 = this.binaryPath_5;
-        this.cmdLineArgs.binaryAddress_5 = this.binaryAddress_5;
+        this.cmdLineArgs.binaryPath_1 = this.binaryPath_1
+        this.cmdLineArgs.binaryAddress_1 = this.binaryAddress_1
 
         // Async message sender
-        ipcRenderer.send("start-esptool-flash", this.cmdLineArgs);
+        ipcRenderer.send("start-esptool-flash1", this.cmdLineArgs);
+      }
+    },
+    flash2: function() {
+      if (this.comPort == "") {
+        this.makeToast("danger", "Please select a COM port");
+        if (this.comPort == "") this.comPortInputState = false;
+      } else if (this.binaryPath_2 == "" || this.binaryAddress_2 == "") {
+        this.makeToast("danger", "Please select a firmware file");
+        if (this.binaryPath_2 == "") this.binaryInputState_2 = false;
+        if (this.binaryAddress_2 == "") this.addressInputState_2 = false;
+      } else {
+        this.flashProgressValue = 0;
+        this.showCheckMark = false;
+        this.showErrorMark = false;
+        this.showSpinner = true;
+        this.terminalData = "";
+
+        this.cmdLineArgs.baudrate = this.baudrateSpeed;
+        this.cmdLineArgs.comPort = this.comPort;
+        this.cmdLineArgs.binaryPath_2 = this.binaryPath_2
+        this.cmdLineArgs.binaryAddress_2 = this.binaryAddress_2
+
+        // Async message sender
+        ipcRenderer.send("start-esptool-flash2", this.cmdLineArgs);
       }
     },
     selectBinaryPath_1() {
@@ -403,21 +415,6 @@ export default {
     },
     selectBinaryPath_2() {
       ipcRenderer.send("selectBinaryPath_2");
-      //this.binaryInputState_2 = null;
-      //this.addressInputState_2 = null;
-    },
-    selectBinaryPath_3() {
-      ipcRenderer.send("selectBinaryPath_3");
-      //this.binaryInputState_2 = null;
-      //this.addressInputState_2 = null;
-    },
-    selectBinaryPath_4() {
-      ipcRenderer.send("selectBinaryPath_4");
-      //this.binaryInputState_2 = null;
-      //this.addressInputState_2 = null;
-    },
-    selectBinaryPath_5() {
-      ipcRenderer.send("selectBinaryPath_5");
       //this.binaryInputState_2 = null;
       //this.addressInputState_2 = null;
     },
