@@ -27,6 +27,17 @@ npm install
 ```
 npm run electron:serve
 ```
+### Compiles and creates package(s) for prod
+```
+npm run electron:build
+```
+### big ol' pile of shot to fix later
+```
+--chip esp32 --port "/dev/tty.usbserial-10" --baud 460800 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x10000 .pio/build/esp32dev/firmware.bin 0x1000 /Users/acea/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/bin/bootloader_dio_40m.bin 0x8000 /Users/acea/Documents/FTP/hardware/esp-tracbox/software/esp-tracbox/.pio/build/esp32dev/partitions.bin 0xe000 /Users/acea/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin 0x290000 .pio/build/esp32dev/littlefs.bin
+```
+```
+--chip esp32 --port "/dev/tty.usbserial-10" --baud 460800 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_size detect 0x290000 .pio/build/esp32dev/littlefs.bin
+```
 
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
