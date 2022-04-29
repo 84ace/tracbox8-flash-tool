@@ -2,7 +2,7 @@
 
 Update your TracBox with ease!
 
-![app screenshot](https://raw.githubusercontent.com/84ace/tracbox8-flash-tool/master/src/assets/app-demo.gif)
+![app screenshot](https://raw.githubusercontent.com/84ace/tracbox8-flash-tool/master/src/assets/flash-demo.gif)
 
 A cross platform app built with [Electron](https://www.electronjs.org/)
 
